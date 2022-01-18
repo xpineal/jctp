@@ -4,26 +4,22 @@
 ///@file ThostFtdcMdApi.h
 ///@brief 定义了客户端接口
 ///@history 
-///20060106	赵鸿昊		创建该文件
+///20150422	江鹏		创建该文件
 /////////////////////////////////////////////////////////////////////////
 
 #if !defined(THOST_FTDCMDAPI_H)
 #define THOST_FTDCMDAPI_H
 
-#if _MSC_VER > 1000
-#pragma once
-#endif // _MSC_VER > 1000
-
 #include "ThostFtdcUserApiStruct.h"
 
-#if defined(ISLIB) && defined(WIN32)
-#ifdef LIB_MD_API_EXPORT
-#define MD_API_EXPORT __declspec(dllexport)
+#ifdef MD_API_EXPORT
+	#ifdef WINDOWS
+		#define MD_API_DLL_EXPORT __declspec(dllexport)
+	#else
+		#define MD_API_DLL_EXPORT __attribute__ ((visibility("default")))
+	#endif
 #else
-#define MD_API_EXPORT __declspec(dllimport)
-#endif
-#else
-#define MD_API_EXPORT 
+	#define MD_API_DLL_EXPORT 
 #endif
 
 class CThostFtdcMdSpi
@@ -45,15 +41,11 @@ public:
 	///@param nTimeLapse 距离上次接收报文的时间
 	virtual void OnHeartBeatWarning(int nTimeLapse){};
 	
-
 	///登录请求响应
 	virtual void OnRspUserLogin(CThostFtdcRspUserLoginField *pRspUserLogin, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {};
 
 	///登出请求响应
 	virtual void OnRspUserLogout(CThostFtdcUserLogoutField *pUserLogout, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {};
-
-	///请求查询组播合约响应
-	virtual void OnRspQryMulticastInstrument(CThostFtdcMulticastInstrumentField *pMulticastInstrument, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {};
 
 	///错误应答
 	virtual void OnRspError(CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {};
@@ -73,18 +65,23 @@ public:
 	///深度行情通知
 	virtual void OnRtnDepthMarketData(CThostFtdcDepthMarketDataField *pDepthMarketData) {};
 
+	///分价表通知
+	virtual void OnRtnMBLMarketData(CThostFtdcMBLMarketDataField *pMBLMarketData) {};
+
 	///询价通知
 	virtual void OnRtnForQuoteRsp(CThostFtdcForQuoteRspField *pForQuoteRsp) {};
 };
 
-class MD_API_EXPORT CThostFtdcMdApi
+class MD_API_DLL_EXPORT CThostFtdcMdApi
 {
 public:
 	///创建MdApi
 	///@param pszFlowPath 存贮订阅信息文件的目录，默认为当前目录
+	///@param bIsUsingUdp 是否使用udp,mini2版本不再使用
+	///@param bIsMulticast 是否使用多播,mini2版本不再使用；api会根据连接的后台自动决定是否使用多播
 	///@return 创建出的UserApi
 	///modify for udp marketdata
-	static CThostFtdcMdApi *CreateFtdcMdApi(const char *pszFlowPath = "", const bool bIsUsingUdp=false, const bool bIsMulticast=false);
+	static CThostFtdcMdApi *CreateFtdcMdApi(const char *pszFlowPath = "", const bool bIsUsingUdp = false, const bool bIsMulticast = false);
 	
 	///获取API的版本信息
 	///@retrun 获取到的版本号
@@ -96,7 +93,7 @@ public:
 	
 	///初始化
 	///@remark 初始化运行环境,只有调用后,接口才开始工作
-	virtual void Init() = 0;
+	virtual void Init(bool bContinuousm = false) = 0;
 	
 	///等待接口线程结束运行
 	///@return 线程退出代码
@@ -113,17 +110,6 @@ public:
 	///@remark “tcp”代表传输协议，“127.0.0.1”代表服务器地址。”17001”代表服务器端口号。
 	virtual void RegisterFront(char *pszFrontAddress) = 0;
 	
-	///注册名字服务器网络地址
-	///@param pszNsAddress：名字服务器网络地址。
-	///@remark 网络地址的格式为：“protocol://ipaddress:port”，如：”tcp://127.0.0.1:12001”。 
-	///@remark “tcp”代表传输协议，“127.0.0.1”代表服务器地址。”12001”代表服务器端口号。
-	///@remark RegisterNameServer优先于RegisterFront
-	virtual void RegisterNameServer(char *pszNsAddress) = 0;
-	
-	///注册名字服务器用户信息
-	///@param pFensUserInfo：用户信息。
-	virtual void RegisterFensUserInfo(CThostFtdcFensUserInfoField * pFensUserInfo) = 0;
-	
 	///注册回调接口
 	///@param pSpi 派生自回调接口类的实例
 	virtual void RegisterSpi(CThostFtdcMdSpi *pSpi) = 0;
@@ -134,12 +120,9 @@ public:
 	///@remark 
 	virtual int SubscribeMarketData(char *ppInstrumentID[], int nCount) = 0;
 
-	///退订行情。
-	///@param ppInstrumentID 合约ID  
-	///@param nCount 要订阅/退订行情的合约个数
-	///@remark 
+	///取消订阅行情。
 	virtual int UnSubscribeMarketData(char *ppInstrumentID[], int nCount) = 0;
-	
+
 	///订阅询价。
 	///@param ppInstrumentID 合约ID  
 	///@param nCount 要订阅/退订行情的合约个数
@@ -151,16 +134,13 @@ public:
 	///@param nCount 要订阅/退订行情的合约个数
 	///@remark 
 	virtual int UnSubscribeForQuoteRsp(char *ppInstrumentID[], int nCount) = 0;
-
+	
 	///用户登录请求
 	virtual int ReqUserLogin(CThostFtdcReqUserLoginField *pReqUserLoginField, int nRequestID) = 0;
 	
-
 	///登出请求
 	virtual int ReqUserLogout(CThostFtdcUserLogoutField *pUserLogout, int nRequestID) = 0;
-
-	///请求查询组播合约
-	virtual int ReqQryMulticastInstrument(CThostFtdcQryMulticastInstrumentField *pQryMulticastInstrument, int nRequestID) = 0;
+	
 protected:
 	~CThostFtdcMdApi(){};
 };

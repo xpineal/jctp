@@ -50,7 +50,7 @@ import org.scijava.nativelib.NativeLoader;
 %}
 %pragma(java) jniclasscode=%{
 	private static boolean libraryLoaded = false;
-	
+
 	/**
      * 检查动态链接库是否已被正确加载
      * @return true if loaded else false
@@ -61,8 +61,8 @@ import org.scijava.nativelib.NativeLoader;
 
     static {
         try {
-            NativeLoader.loadLibrary("thostmduserapi_se");
-            NativeLoader.loadLibrary("thosttraderapi_se");
+            NativeLoader.loadLibrary("thostmduserapi");
+            NativeLoader.loadLibrary("thosttraderapi");
             NativeLoader.loadLibrary("jctp");
             swig_module_init();
             libraryLoaded = true;
@@ -78,7 +78,7 @@ import org.scijava.nativelib.NativeLoader;
 %}
 
 %wrapper %{
-SWIGEXPORT void JNICALL Java_org_rationalityfrontline_jctp_jctpJNI_release(JNIEnv *jenv, jclass jcls) {
+SWIGEXPORT void JNICALL Java_org_kr_jctp_jctpJNI_release(JNIEnv *jenv, jclass jcls) {
     jenv->DeleteGlobalRef(Swig::jclass_jctpJNI);
     Swig::jclass_jctpJNI = NULL;
 }

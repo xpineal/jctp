@@ -26,4 +26,4 @@ add_library(
         jctp.h jctp.cpp
 )
 
-target_link_libraries(jctp thostmduserapi_se thosttraderapi_se)
+target_link_libraries(jctp thostmduserapi thosttraderapi)

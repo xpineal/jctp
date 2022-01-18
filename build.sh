@@ -4,4 +4,6 @@ cd swig
 cd ../cpp
 ./build.sh
 cd ../java
+rm -rf build
+rm -rf .gradle
 ./gradlew jar

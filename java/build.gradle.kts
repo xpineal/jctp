@@ -6,11 +6,9 @@ plugins {
     signing
 }
 
-group = "org.rationalityfrontline"
-version = "6.6.1_P1-1.0.3"
+group = "org.kr"
+version = "1.5.8"
 val NAME = project.name
-val DESC = "Java wrapper for CTP"
-val GITHUB_REPO = "ktrader-tech/jctp"
 
 repositories {
     mavenCentral()
@@ -36,7 +34,7 @@ tasks {
                 os.isWindows -> "\r\n"
                 else -> "\n"
             }
-            file("src/main/java/org/rationalityfrontline/jctp/jctpJNI.java").run {
+            file("src/main/java/org/kr/jctp/jctpJNI.java").run {
                 writeText(readText(Charsets.UTF_8).replace(
                                 "  static {$lineBreak" +
                                 "    swig_module_init();$lineBreak" +
@@ -48,7 +46,7 @@ tasks {
         manifest.attributes(mapOf(
             "Implementation-Title" to NAME,
             "Implementation-Version" to project.version,
-            "Implementation-Vendor" to "RationalityFrontline"
+            "Implementation-Vendor" to "kr"
         ))
         from("../lib") {
             include("*.dll")
@@ -66,57 +64,4 @@ tasks {
             encoding = "UTF-8"
         }
     }
-}
-
-publishing {
-    publications {
-        create<MavenPublication>("maven") {
-            from(components["java"])
-            pom {
-                name.set(NAME)
-                description.set(DESC)
-                packaging = "jar"
-                url.set("https://github.com/$GITHUB_REPO")
-                licenses {
-                    license {
-                        name.set("The Apache Software License, Version 2.0")
-                        url.set("http://www.apache.org/licenses/LICENSE-2.0.txt")
-                    }
-                }
-                developers {
-                    developer {
-                        name.set("RationalityFrontline")
-                        email.set("rationalityfrontline@gmail.com")
-                        organization.set("ktrader-tech")
-                        organizationUrl.set("https://github.com/ktrader-tech")
-                    }
-                }
-                scm {
-                    connection.set("scm:git:git://github.com/$GITHUB_REPO.git")
-                    developerConnection.set("scm:git:ssh://github.com:$GITHUB_REPO.git")
-                    url.set("https://github.com/$GITHUB_REPO/tree/master")
-                }
-            }
-        }
-    }
-    repositories {
-        fun env(propertyName: String): String {
-            return if (project.hasProperty(propertyName)) {
-                project.property(propertyName) as String
-            } else "Unknown"
-        }
-        maven {
-            val releasesRepoUrl = uri("https://oss.sonatype.org/service/local/staging/deploy/maven2/")
-            val snapshotsRepoUrl = uri("https://oss.sonatype.org/content/repositories/snapshots/")
-            url = if (version.toString().endsWith("SNAPSHOT")) snapshotsRepoUrl else releasesRepoUrl
-            credentials {
-                username = env("ossrhUsername")
-                password = env("ossrhPassword")
-            }
-        }
-    }
-}
-
-signing {
-    sign(publishing.publications["maven"])
 }
