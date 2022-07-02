@@ -6,3 +6,4 @@ lib/jctp.dll
 lib/libjctp.so
 *.java
 !module-info.java
+.DS_Store
