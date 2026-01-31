@@ -7,7 +7,7 @@ plugins {
 }
 
 group = "org.kr"
-version = "1.5.10"
+version = "1.5.11"
 val NAME = project.name
 
 repositories {
